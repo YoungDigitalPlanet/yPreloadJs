@@ -1,0 +1,58 @@
+<project name="ypreloadjs" default="dist" xmlns:ivy="antlib:org.apache.ivy.ant">
+	
+	<tstamp><format property="tstamp" pattern="yyyyMMddHHmm" timezone="GMT"/></tstamp>
+	
+	<property name="bin.dir" value="${basedir}/bin"/>
+	<property name="tools.dir" value="${basedir}/tools"/>
+	<property name="src.dir" value="${basedir}/src"/>
+	<property name="dist.dir" value="${basedir}/dist"/>
+
+	<property file="${basedir}/default.properties"/>
+	
+	<taskdef name="jscomp" classname="com.google.javascript.jscomp.ant.CompileTask" classpath="${tools.dir}/compiler.jar"/>
+	
+	<target name="publish" depends="dist">
+		<ivy:resolve/>
+		<ivy:publish
+			pubrevision="${revision}"
+			resolver="${ivy.publish.ydp.resolver}"
+			status="${ivy.publish.status}"
+			forcedeliver="true"
+			artifactspattern="dist/[artifact].[ext]"
+			overwrite="true"/>		
+	</target>
+	
+	<target name="compile">
+		<mkdir dir="${bin.dir}"/>
+		<jscomp output="${bin.dir}/ypreloadjs.tmp.js">
+			<sources dir="${src.dir}/preloadjs">
+				<file name="AbstractLoader.js"/>
+				<file name="PreloadJS.js"/>
+				<file name="TagLoader.js"/>
+				<file name="XHRLoader.js"/>
+			</sources>
+		</jscomp>
+		<concat destfile="${bin.dir}/ypreloadjs.js" encoding="UTF-8">
+			<filterchain>
+				<expandproperties/>
+			</filterchain>
+			<filelist dir="${basedir}" files="license.txt"/>
+			<filelist dir="${bin.dir}" files="ypreloadjs.tmp.js"/>
+		</concat>
+		
+		<delete file="${bin.dir}/ypreloadjs.tmp.js"/>
+	</target>
+
+	<target name="dist" depends="compile">
+		<mkdir dir="${dist.dir}"/>
+		<zip file="${dist.dir}/ypreloadjs.zip">
+			<fileset dir="${bin.dir}"/>
+		</zip>
+	</target>
+
+	<target name="clean">
+		<delete dir="${dist.dir}" />
+		<delete dir="${bin.dir}" />
+	</target>
+
+</project>
